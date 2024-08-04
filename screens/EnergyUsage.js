@@ -4,7 +4,8 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {PieChart} from 'react-native-chart-kit';
 
 const EnergyUsage = ({uid}) => {
-  const dataRealTime = getRealTimeData({uid});
+  const pathData = `/sensor_data/${uid}/data/`
+  const dataRealTime = getRealTimeData({pathData});
   const [energyUsage, setEnergyUsage] = useState({
     used: 0,
     available: 0,

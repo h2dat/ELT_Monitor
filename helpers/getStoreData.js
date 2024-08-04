@@ -1,16 +1,16 @@
 import React, {useEffect, useState} from 'react';
-import {collection, getDocs} from 'firebase/firestore';
+import {collection, getDocs, getDoc, doc} from 'firebase/firestore';
 import {FIREBASE_STORE} from '../FirbaseConfig';
 const db = FIREBASE_STORE;
 
-export const getStoreData = ({uid}) => {
+export const getStoreData = ({pathData}) => {
   const [sensorData, setSensorData] = useState(null);
 
   useEffect(() => {
     const fetchSensorData = async () => {
       try {
         const querySnapshot = await getDocs(
-          collection(db, `sensor_data/${uid}/data/`),
+          collection(db, pathData),
         );
         const data = querySnapshot.docs.map(doc => ({
           id: doc.id,
@@ -22,10 +22,34 @@ export const getStoreData = ({uid}) => {
       }
     };
 
-    if (uid) {
+    if (pathData) {
       fetchSensorData();
     }
-  }, [uid]);
+  }, [pathData]);
+
+  return sensorData;
+};
+export const getUserStoreData = ({pathData}) => {
+  const [sensorData, setSensorData] = useState(null);
+  useEffect(() => {
+    const fetchSensorData = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(db, pathData),
+        );
+        const data =querySnapshot.docs.map(doc => ({
+          ...doc.data(),
+        }))
+        setSensorData(data);
+      } catch (error) {
+        console.error('Error fetching sensor data: ', error);
+      }
+    };
+
+    if (pathData) {
+      fetchSensorData();
+    }
+  }, [pathData]);
 
   return sensorData;
 };

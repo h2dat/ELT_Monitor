@@ -1,17 +1,19 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const Navbar = ({navigation}) => {
+const Navbar = () => {
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate("Settings")}>
         <Text style={styles.icon}>⚡️</Text>
         <Text style={styles.text}>Electricity</Text>
       </TouchableOpacity>
-      <View style={styles.navItem}>
+      <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate("Main Screen")}>
         <Text style={styles.icon}>🏠</Text>
         <Text style={styles.text}>Home</Text>
-      </View>
+      </TouchableOpacity>
       <View style={styles.navItem}>
         <Text style={styles.icon}>👤</Text>
         <Text style={styles.text}>User</Text>

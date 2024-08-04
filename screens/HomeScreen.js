@@ -1,18 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import { getRealTimeData } from '../helpers/getRealTimeData';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
+import React, {useEffect, useState} from 'react';
+import {getRealTimeData} from '../helpers/getRealTimeData';
+import {getUserStoreData} from '../helpers/getStoreData';
+import {getFirestore} from 'firebase/firestore';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  TextInput,
+  Modal,
+  Alert,
+} from 'react-native';
+import {PieChart} from 'react-native-chart-kit';
+import {doc, setDoc, updateDoc, getDoc} from 'firebase/firestore';
+import FIREBASE_APP from '../FirbaseConfig';
 
-const HomeScreen = ({ uid }) => {
-  const dataRealTime = getRealTimeData({ uid });
+const db = getFirestore(FIREBASE_APP);
+const HomeScreen = ({uid}) => {
+  const pathData = `/sensor_data/${uid}/data/`;
+  const pathUsage = `/user_data/${uid}/usage/`;
+  const dataRealTime = getRealTimeData({pathData});
+  if (dataRealTime == null) {
+    Alert.alert("Please config device before start! If you have any trouble contact support")
+    return
+  }
+  const usageData = getUserStoreData({pathData: pathUsage});
   const [energyUsage, setEnergyUsage] = useState({
     used: 0,
     available: 0,
   });
-
+  const [availableInput, setAvailableInput] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
   useEffect(() => {
-    setEnergyUsage({ used: dataRealTime.energy, available: 0 });
-  }, [dataRealTime]);
+    if (usageData?.length > 0) {
+      setEnergyUsage({
+        used: dataRealTime.energy,
+        available: usageData[0].usage,
+      });
+    } else {
+      setEnergyUsage({used: dataRealTime.energy, available: 0});
+    }
+  }, [dataRealTime, usageData]);
 
   const data = [
     {
@@ -41,8 +70,28 @@ const HomeScreen = ({ uid }) => {
   };
 
   const handleUsageChange = () => {
-    // Logic to update energy usage based on user interaction
-    // (e.g., using a slider or input field)
+    const newAvailable = parseFloat(availableInput);
+
+    if (isNaN(newAvailable) || newAvailable < 0) {
+      Alert.alert(
+        'Invalid input',
+        'Please enter a valid positive number for available energy.',
+      );
+      return;
+    }
+    const docRef = doc(db, pathUsage + 'usageData');
+    const docSnap = getDoc(docRef);
+
+    if (docSnap.exists) {
+      updateDoc(docRef, {usage: newAvailable});
+      console.log('Document updated with ID: ', docRef.id);
+    } else {
+      setDoc(docRef, {usage: newAvailable});
+      console.log('Document written with ID: ', docRef.id);
+    }
+    setEnergyUsage({...energyUsage, available: newAvailable});
+
+    setModalVisible(false);
   };
 
   const screenWidth = Dimensions.get('window').width;
@@ -66,27 +115,44 @@ const HomeScreen = ({ uid }) => {
       />
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: '#0080ff' }]} />
+          <View style={[styles.legendColor, {backgroundColor: '#0080ff'}]} />
           <Text>Used: {energyUsage.used}</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: '#00FFFF' }]} />
+          <View style={[styles.legendColor, {backgroundColor: '#00FFFF'}]} />
           <Text>Available: {energyUsage.available}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleUsageChange}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => setModalVisible(true)}>
         <Text style={styles.buttonText}>Change Usage</Text>
       </TouchableOpacity>
-      <View style={styles.statusContainer}>
-        <Text style={styles.statusTitle}>Real-time Electricity Status</Text>
-        <View style={styles.statusContent}>
-          <Text>Voltage: {dataRealTime.voltage} V</Text>
-          <Text>Current: {dataRealTime.current} A</Text>
-          <Text>Power: {dataRealTime.power} W</Text>
-          <Text>Frequency: {dataRealTime.frequency} Hz</Text>
-          <Text>Power Factor: {dataRealTime.pf} pf</Text>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Enter Available Energy</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Available energy"
+              value={availableInput}
+              onChangeText={setAvailableInput}
+              keyboardType="numeric"
+            />
+            <TouchableOpacity
+              style={styles.buttonClose}
+              onPress={handleUsageChange}>
+              <Text style={styles.buttonText}>Submit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </Modal>
     </View>
   );
 };
@@ -121,6 +187,15 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 5,
   },
+  input: {
+    height: 40,
+    borderColor: '#CCCCCC',
+    borderWidth: 1,
+    borderRadius: 5,
+    width: '80%',
+    marginTop: 10,
+    paddingLeft: 10,
+  },
   button: {
     backgroundColor: '#0080ff',
     padding: 10,
@@ -131,20 +206,37 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  statusContainer: {
-    marginTop: 30,
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  statusTitle: {
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
-  statusContent: {
-    alignItems: 'flex-start',
+  buttonClose: {
+    backgroundColor: '#0080ff',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 15,
   },
 });

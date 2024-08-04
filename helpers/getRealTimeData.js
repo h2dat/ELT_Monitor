@@ -1,37 +1,34 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useState} from 'react';
 import {ref, onValue} from 'firebase/database';
 import {FIREBASE_DATABASE} from '../FirbaseConfig';
 const database = FIREBASE_DATABASE;
 
-export const getRealTimeData =({uid}) => {
-    const [data, setData] = useState({
-        voltage: null,
-        current: null,
-        power: null,
-        energy: null,
-        frequency: null,
-        pf: null,
-      });
-      useEffect(() => {
-        const dbRef = ref(database, `/sensor_data/${uid}/data/`);
-    
-        const unsubscribe = onValue(dbRef, snapshot => {
-          if (snapshot.exists()) {
-            const value = snapshot.val();
-            setData({
-              voltage: value.voltage,
-              current: value.current,
-              power: value.power,
-              energy: value.energy,
-              frequency: value.frequency,
-              pf: value.pf,
-            });
-          } else {
-            console.log('No data available');
+export const getRealTimeData = ({pathData}) => {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    const dbRef = ref(database, pathData);
+    const unsubscribe = onValue(dbRef, snapshot => {
+      if (snapshot.exists()) {
+        const value = snapshot.val();
+        const processedData = [];
+        for (let attr in value) {
+          for (let key in value[attr]) {
+            if (Array.isArray(value[attr][key].data)) {
+              value[attr][key].data.forEach(item => {
+                const processedItem = item;
+                processedData.push(processedItem);
+              });
+            }
           }
-        });
-    
-        return () => unsubscribe();
-      }, [uid]);
-    return data
-}
+        }
+        setData(processedData);
+      } else {
+        console.log('No data available');
+        setData();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [pathData]);
+  return data;
+};

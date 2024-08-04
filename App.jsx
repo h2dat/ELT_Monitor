@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './screens/Login';
 import MainScreen from './screens/MainScreen';
-import SettingsScreen from './screens/SettingsScreen'; // Ensure this path is correct
+import SettingsScreen from './screens/SettingsScreen';
+import DevicesManagerScreen from './screens/DevicesManagerScreen'
 import { onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './FirbaseConfig';
 
@@ -31,6 +32,11 @@ function App() {
           name="Settings"
           component={SettingsScreen}
           options={{ headerShown: false }}
+        />
+        <InsideStack.Screen
+          name="Devices Manager"
+          component={DevicesManagerScreen}
+
         />
       </InsideStack.Navigator>
     );
