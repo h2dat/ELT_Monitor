@@ -46,8 +46,6 @@ const Login = () => {
         email,
         password,
       );
-
-      console.log(response);
     } catch (error) {
       Alert.alert('Sign in failed: ' + error.message);
       console.log(error);

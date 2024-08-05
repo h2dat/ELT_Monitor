@@ -3,8 +3,6 @@ import {getDatabase, ref, onValue, update} from 'firebase/database';
 import {FIREBASE_APP, FIREBASE_AUTH} from '../FirbaseConfig';
 import {onAuthStateChanged} from 'firebase/auth';
 
-import {getRealTimeData} from '../helpers/getRealTimeData';
-
 import {
   View,
   Text,
@@ -32,7 +30,6 @@ const EditSystemScreen = () => {
   const pathData = `/sensor/${user?.uid}/data/`;
   const [systems, setSystems] = useState([]);
   useEffect(() => {
-    console.log(pathData);
     const dbRef = ref(db, pathData);
     const unsubscribe = onValue(
       dbRef,
@@ -76,9 +73,9 @@ const EditSystemScreen = () => {
       const docRef = ref(db, pathData);
       const element = systems.find(system => system.id === selectedId);
 
-      const enabledValue = 0 ? element.enabled === 'fasle' : 1;
+      const enable = element.enabled ? 1 : 0;
       const updateDeviceValue = {
-        [selectedId - 1]: `${enabledValue}_${deviceName}`,
+        [selectedId]: `${enable}_${deviceName}`,
       };
       update(docRef, updateDeviceValue);
       setSystems(
@@ -96,10 +93,9 @@ const EditSystemScreen = () => {
   const toggleSwitch = id => {
     const docRef = ref(db, pathData);
     const element = systems.find(system => system.id === id);
-
-    const enabledValue = 0 ? element.enabled === 'fasle' : 1;
+    const enable = element.enabled ? 0 : 1;
     const updateDeviceValue = {
-      [id - 1]: `${enabledValue}_${deviceName}`,
+      [id]: `${enable}_${deviceName || 'null'}`,
     };
     update(docRef, updateDeviceValue);
     setSystems(

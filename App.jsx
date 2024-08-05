@@ -5,6 +5,7 @@ import Login from './screens/Login';
 import MainScreen from './screens/MainScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import DevicesManagerScreen from './screens/DevicesManagerScreen'
+import UserScreen from './screens/UserScreen';
 import { onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './FirbaseConfig';
 
@@ -36,7 +37,11 @@ function App() {
         <InsideStack.Screen
           name="Devices Manager"
           component={DevicesManagerScreen}
-
+        />
+        
+        <InsideStack.Screen
+          name="User"
+          component={UserScreen}
         />
       </InsideStack.Navigator>
     );

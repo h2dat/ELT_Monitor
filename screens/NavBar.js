@@ -14,10 +14,10 @@ const Navbar = () => {
         <Text style={styles.icon}>🏠</Text>
         <Text style={styles.text}>Home</Text>
       </TouchableOpacity>
-      <View style={styles.navItem}>
+      <TouchableOpacity style={styles.navItem} onPress={()=> navigation.navigate("User")}>
         <Text style={styles.icon}>👤</Text>
         <Text style={styles.text}>User</Text>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

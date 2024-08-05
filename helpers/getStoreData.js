@@ -29,10 +29,7 @@ export const getStoreData = ({pathData}) => {
 
   return sensorData;
 };
-export const getUserStoreData = ({pathData}) => {
-  const [sensorData, setSensorData] = useState(null);
-  useEffect(() => {
-    const fetchSensorData = async () => {
+export const getUserStoreData = async ({pathData}) => {
       try {
         const querySnapshot = await getDocs(
           collection(db, pathData),
@@ -40,16 +37,9 @@ export const getUserStoreData = ({pathData}) => {
         const data =querySnapshot.docs.map(doc => ({
           ...doc.data(),
         }))
-        setSensorData(data);
+        return data
       } catch (error) {
         console.error('Error fetching sensor data: ', error);
+        return []
       }
-    };
-
-    if (pathData) {
-      fetchSensorData();
-    }
-  }, [pathData]);
-
-  return sensorData;
 };
